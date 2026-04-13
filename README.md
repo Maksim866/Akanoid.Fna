@@ -1,4 +1,6 @@
-# FNA Arkanoid
+#Задача: FNA
+
+Arkanoid.Fna
 
 Калинкин Максим Леонидович
 
