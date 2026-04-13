@@ -1,4 +1,4 @@
-#Задача: FNA
+# Задача: FNA
 
 Arkanoid.Fna
 
