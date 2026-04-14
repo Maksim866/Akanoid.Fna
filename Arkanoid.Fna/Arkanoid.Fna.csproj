@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{B9FC694D-03AE-4FB0-A8A0-30D19AAD7E62}</ProjectGuid>
+    <ProjectGuid>{3177FEFC-F4E8-4CC1-9F04-731EC9B60934}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>Akanoid.Fna</RootNamespace>
-    <AssemblyName>Akanoid.Fna</AssemblyName>
+    <RootNamespace>Arkanoid.Fna</RootNamespace>
+    <AssemblyName>Arkanoid.Fna</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -42,7 +42,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>10.0</LangVersion>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
@@ -52,7 +52,7 @@
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>x64</PlatformTarget>
-    <LangVersion>7.3</LangVersion>
+    <LangVersion>10.0</LangVersion>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
@@ -63,6 +63,12 @@
     <Reference Include="FNA">
       <HintPath>.\FNA.dll</HintPath>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Arkanoid.Logic\Arkanoid.Logic.csproj">
+      <Project>{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}</Project>
+      <Name>Arkanoid.Logic</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FNA.cs" />

@@ -6,8 +6,8 @@
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
   </Folder>
-  <Project Path="Akanoid.Fna/Akanoid.Fna.csproj" Id="b9fc694d-03ae-4fb0-a8a0-30d19aad7e62">
+  <Project Path="Arkanoid.Fna/Arkanoid.Fna.csproj">
     <Platform Solution="*|x64" Project="x64" />
-    <Platform Solution="Debug|Any CPU" Project="x64" />
   </Project>
+  <Project Path="Arkanoid.Logic/Arkanoid.Logic.csproj" />
 </Solution>
