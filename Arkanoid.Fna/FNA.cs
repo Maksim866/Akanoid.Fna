@@ -1,11 +1,12 @@
+using System;
+using System.Collections.Generic;
+using Arkanoid.Logic.Engine;
+using Arkanoid.Logic.Enums;
+using Arkanoid.Logic.Interfaces;
+using Arkanoid.Logic.Models;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using Arkanoid.Logic.Engine;
-using Arkanoid.Logic.Interfaces;
-using Arkanoid.Logic.Models;
-using System;
-using System.Collections.Generic;
 
 namespace Arkanoid.FNA
 {
@@ -16,6 +17,7 @@ namespace Arkanoid.FNA
         private IArkanoidEngine engine;
         private Texture2D pixel;
         private SpriteFont font;
+        private KeyboardState previousKeyboardState;
 
         // Простые цвета
         private readonly Color[] brickColors = {
@@ -24,6 +26,13 @@ namespace Arkanoid.FNA
             new Color(52, 152, 219)
         };
 
+        // Цвета для типов усилений
+        private readonly Dictionary<PowerUpType, Color> powerUpIndicatorColors = new Dictionary<PowerUpType, Color>
+        {
+            { PowerUpType.ExtraBall, new Color(142, 68, 173) },      // Фиолетовый
+            { PowerUpType.DamageBoost, new Color(192, 57, 43) },     // Красный
+            { PowerUpType.WidePaddle, new Color(22, 160, 133) }      // Бирюзовый
+        };
         private const int Width = 800, Height = 600;
 
         public FNA()
@@ -68,29 +77,32 @@ namespace Arkanoid.FNA
 
             // Управление платформой
             var kb = Keyboard.GetState();
-            if (kb.IsKeyDown(Keys.Left) || kb.IsKeyDown(Keys.A))
+            if (!engine.GameState.IsPaused && !engine.GameState.IsGameOver && !engine.GameState.IsGameWon)
             {
-                engine.SetPlatformPosition(engine.Platform.X - 8);
+                if (kb.IsKeyDown(Keys.Left) || kb.IsKeyDown(Keys.A))
+                {
+                    engine.SetPlatformPosition(engine.Platform.X - 8);
+                }
+
+                if (kb.IsKeyDown(Keys.Right) || kb.IsKeyDown(Keys.D))
+                {
+                    engine.SetPlatformPosition(engine.Platform.X + 8);
+                }
+
+                if (kb.IsKeyDown(Keys.Space) && !engine.GameState.IsBallLaunched)
+                {
+                    engine.LaunchBall();
+                }
             }
 
-            if (kb.IsKeyDown(Keys.Right) || kb.IsKeyDown(Keys.D))
-            {
-                engine.SetPlatformPosition(engine.Platform.X + 8);
-            }
-
-            // Запуск мяча
-            if (kb.IsKeyDown(Keys.Space) && !engine.GameState.IsBallLaunched)
-            {
-                engine.LaunchBall();
-            }
-
-            // Пауза / Рестарт
-            if (kb.IsKeyDown(Keys.P))
+            // Пауза
+            if (kb.IsKeyDown(Keys.P) && previousKeyboardState.IsKeyUp(Keys.P))
             {
                 engine.TogglePause();
             }
 
-            if (kb.IsKeyDown(Keys.R))
+            // Рестарт
+            if (kb.IsKeyDown(Keys.R) && previousKeyboardState.IsKeyUp(Keys.R))
             {
                 engine.RestartGame();
             }
@@ -100,6 +112,8 @@ namespace Arkanoid.FNA
             {
                 engine.Update();
             }
+
+            previousKeyboardState = kb;
 
             base.Update(gameTime);
         }
@@ -118,13 +132,35 @@ namespace Arkanoid.FNA
                 }
 
                 var color = brickColors[b.Row % brickColors.Length];
+
+                if (b.IsHit)
+                {
+                    float flashIntensity = 1.0f - (b.HitFrames / 10.0f);
+                    color = Color.Lerp(color, Color.White, flashIntensity * 0.5f);
+                }
                 spriteBatch.Draw(pixel, new Rectangle(b.X, b.Y, b.Width, b.Height), color);
+
+                // Платформа
+                var p = engine.Platform;
+                spriteBatch.Draw(pixel, new Rectangle(p.X, p.Y, p.Width, p.Height), Color.Silver);
+
+                spriteBatch.Draw(pixel, new Rectangle(b.X, b.Y, b.Width, 2), Color.Black * 0.5f); // Верх
+                spriteBatch.Draw(pixel, new Rectangle(b.X, b.Y + b.Height - 2, b.Width, 2), Color.Black * 0.5f); // Низ
+                spriteBatch.Draw(pixel, new Rectangle(b.X, b.Y, 2, b.Height), Color.Black * 0.5f); // Лево
+                spriteBatch.Draw(pixel, new Rectangle(b.X + b.Width - 2, b.Y, 2, b.Height), Color.Black * 0.5f); // Право
+
+                // Отображение здоровья для многоразовых кирпичей
+                if (b.MaxHealth > 1 && font != null)
+                {
+                    var healthText = b.Health.ToString();
+                    var measure = font.MeasureString(healthText);
+                    Vector2 textPos = new Vector2(
+                        b.X + b.Width / 2 - measure.X / 2,
+                        b.Y + b.Height / 2 - measure.Y / 2
+                    );
+                    spriteBatch.DrawString(font, healthText, textPos, Color.White);
+                }
             }
-
-            // Платформа
-            var p = engine.Platform;
-            spriteBatch.Draw(pixel, new Rectangle(p.X, p.Y, p.Width, p.Height), Color.Silver);
-
             // Мячи
             foreach (var ball in engine.Balls)
             {
@@ -135,6 +171,39 @@ namespace Arkanoid.FNA
 
                 spriteBatch.Draw(pixel, new Rectangle(ball.X, ball.Y, ball.Size, ball.Size),
                     ball.Damage > 1 ? Color.OrangeRed : Color.White);
+            }
+
+            // Power-ups
+            foreach (var pu in engine.PowerUps)
+            {
+                if (!pu.IsActive)
+                {
+                    continue;
+                }
+
+                var puColor = powerUpIndicatorColors.ContainsKey(pu.Type)
+                    ? powerUpIndicatorColors[pu.Type]
+                    : Color.Purple;
+
+                spriteBatch.Draw(pixel, new Rectangle(pu.X, pu.Y, pu.Size, pu.Size), Color.Purple);
+
+                if (font != null)
+                {
+                    var letter = pu.Type switch
+                    {
+                        PowerUpType.ExtraBall => "●",
+                        PowerUpType.DamageBoost => "▲",
+                        PowerUpType.WidePaddle => "◼",
+                        _ => "?"
+                    };
+
+                    var measure = font.MeasureString(letter);
+                    Vector2 textPos = new Vector2(
+                        pu.X + pu.Size / 2 - measure.X / 2,
+                        pu.Y + pu.Size / 2 - measure.Y / 2
+                    );
+                    spriteBatch.DrawString(font, letter, textPos, Color.White);
+                }
             }
 
             if (font != null)
@@ -174,20 +243,13 @@ namespace Arkanoid.FNA
                         "YOU WIN! - Press R",
                         new Vector2(290, 250), Color.Gold);
                 }
+
+                // Легенда
+                spriteBatch.DrawString(font, "Power-ups:", new Vector2(10, Height - 70), Color.Gray);
+                spriteBatch.DrawString(font, "● Extra Ball", new Vector2(10, Height - 50), powerUpIndicatorColors[PowerUpType.ExtraBall]);
+                spriteBatch.DrawString(font, "▲ Damage", new Vector2(120, Height - 50), powerUpIndicatorColors[PowerUpType.DamageBoost]);
+                spriteBatch.DrawString(font, "◼ Wide", new Vector2(230, Height - 50), powerUpIndicatorColors[PowerUpType.WidePaddle]);
             }
-            // Power-ups
-            foreach (var pu in engine.PowerUps)
-            {
-                if (!pu.IsActive)
-                {
-                    continue;
-                }
-
-                spriteBatch.Draw(pixel, new Rectangle(pu.X, pu.Y, pu.Size, pu.Size), Color.Purple);
-            }
-
-            // Сообщения
-
             spriteBatch.End();
             base.Draw(gameTime);
         }
