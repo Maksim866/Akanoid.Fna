@@ -16,7 +16,7 @@ namespace Arkanoid.FNA
         SpriteBatch spriteBatch;
         private IArkanoidEngine engine;
         private Texture2D pixel;
-        private SpriteFont font;
+        private BitmapFont font;
         private KeyboardState previousKeyboardState;
 
         // Простые цвета
@@ -58,12 +58,11 @@ namespace Arkanoid.FNA
 
             try
             {
-                font = Content.Load<SpriteFont>("GameFont");
-                Console.WriteLine("Font loaded successfully!");
+                font = new BitmapFont(GraphicsDevice, "Arial", 12);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Font load error: {ex.Message}");
+                Console.WriteLine($"Font error: {ex.Message}");
                 font = null;
             }
         }
@@ -138,29 +137,63 @@ namespace Arkanoid.FNA
                     float flashIntensity = 1.0f - (b.HitFrames / 10.0f);
                     color = Color.Lerp(color, Color.White, flashIntensity * 0.5f);
                 }
-                spriteBatch.Draw(pixel, new Rectangle(b.X, b.Y, b.Width, b.Height), color);
 
-                // Платформа
-                var p = engine.Platform;
-                spriteBatch.Draw(pixel, new Rectangle(p.X, p.Y, p.Width, p.Height), Color.Silver);
+                // ✅ Затемнение цвета в зависимости от здоровья
+                float healthRatio = (float)b.Health / b.MaxHealth;
+                Color brickColor = new Color(
+                    (byte)(color.R * healthRatio),
+                    (byte)(color.G * healthRatio),
+                    (byte)(color.B * healthRatio)
+                );
 
-                spriteBatch.Draw(pixel, new Rectangle(b.X, b.Y, b.Width, 2), Color.Black * 0.5f); // Верх
-                spriteBatch.Draw(pixel, new Rectangle(b.X, b.Y + b.Height - 2, b.Width, 2), Color.Black * 0.5f); // Низ
-                spriteBatch.Draw(pixel, new Rectangle(b.X, b.Y, 2, b.Height), Color.Black * 0.5f); // Лево
-                spriteBatch.Draw(pixel, new Rectangle(b.X + b.Width - 2, b.Y, 2, b.Height), Color.Black * 0.5f); // Право
+                spriteBatch.Draw(pixel, new Rectangle(b.X, b.Y, b.Width, b.Height), brickColor);
 
-                // Отображение здоровья для многоразовых кирпичей
-                if (b.MaxHealth > 1 && font != null)
+                // Границы кирпичика
+                spriteBatch.Draw(pixel, new Rectangle(b.X, b.Y, b.Width, 2), Color.Black * 0.5f);
+                spriteBatch.Draw(pixel, new Rectangle(b.X, b.Y + b.Height - 2, b.Width, 2), Color.Black * 0.5f);
+                spriteBatch.Draw(pixel, new Rectangle(b.X, b.Y, 2, b.Height), Color.Black * 0.5f);
+                spriteBatch.Draw(pixel, new Rectangle(b.X + b.Width - 2, b.Y, 2, b.Height), Color.Black * 0.5f);
+
+                // ✅ ТРЕЩИНЫ вместо цифр
+                int damageLevel = b.MaxHealth - b.Health;
+                if (damageLevel > 0)
                 {
-                    var healthText = b.Health.ToString();
-                    var measure = font.MeasureString(healthText);
-                    Vector2 textPos = new Vector2(
-                        b.X + b.Width / 2 - measure.X / 2,
-                        b.Y + b.Height / 2 - measure.Y / 2
-                    );
-                    spriteBatch.DrawString(font, healthText, textPos, Color.White);
+                    Color crackColor = Color.Black * 0.7f;
+
+                    // Рисуем трещины в зависимости от уровня повреждения
+                    switch (damageLevel)
+                    {
+                        case 1:
+                            // Одна маленькая трещина
+                            spriteBatch.Draw(pixel, new Rectangle(b.X + b.Width / 2 - 5, b.Y + b.Height / 2 - 1, 10, 2), crackColor);
+                            break;
+                        case 2:
+                            // Две трещины (крест)
+                            spriteBatch.Draw(pixel, new Rectangle(b.X + b.Width / 2 - 5, b.Y + b.Height / 2 - 1, 10, 2), crackColor);
+                            spriteBatch.Draw(pixel, new Rectangle(b.X + b.Width / 2 - 1, b.Y + b.Height / 2 - 5, 2, 10), crackColor);
+                            break;
+                        case 3:
+                            // Три трещины (диагонали)
+                            spriteBatch.Draw(pixel, new Rectangle(b.X + b.Width / 2 - 5, b.Y + b.Height / 2 - 1, 10, 2), crackColor);
+                            spriteBatch.Draw(pixel, new Rectangle(b.X + b.Width / 2 - 1, b.Y + b.Height / 2 - 5, 2, 10), crackColor);
+                            spriteBatch.Draw(pixel, new Rectangle(b.X + 5, b.Y + 5, 8, 2), crackColor);
+                            break;
+                        default:
+                            // Много трещин (сетка)
+                            spriteBatch.Draw(pixel, new Rectangle(b.X + b.Width / 2 - 5, b.Y + b.Height / 2 - 1, 10, 2), crackColor);
+                            spriteBatch.Draw(pixel, new Rectangle(b.X + b.Width / 2 - 1, b.Y + b.Height / 2 - 5, 2, 10), crackColor);
+                            spriteBatch.Draw(pixel, new Rectangle(b.X + 5, b.Y + 5, 8, 2), crackColor);
+                            spriteBatch.Draw(pixel, new Rectangle(b.X + 5, b.Y + b.Height - 7, 8, 2), crackColor);
+                            spriteBatch.Draw(pixel, new Rectangle(b.X + b.Width - 7, b.Y + 5, 2, 8), crackColor);
+                            break;
+                    }
                 }
             }
+
+            // Платформа
+            var p = engine.Platform;
+            spriteBatch.Draw(pixel, new Rectangle(p.X, p.Y, p.Width, p.Height), Color.Silver);
+
             // Мячи
             foreach (var ball in engine.Balls)
             {
@@ -185,7 +218,7 @@ namespace Arkanoid.FNA
                     ? powerUpIndicatorColors[pu.Type]
                     : Color.Purple;
 
-                spriteBatch.Draw(pixel, new Rectangle(pu.X, pu.Y, pu.Size, pu.Size), Color.Purple);
+                spriteBatch.Draw(pixel, new Rectangle(pu.X, pu.Y, pu.Size, pu.Size), puColor);
 
                 if (font != null)
                 {
@@ -202,54 +235,86 @@ namespace Arkanoid.FNA
                         pu.X + pu.Size / 2 - measure.X / 2,
                         pu.Y + pu.Size / 2 - measure.Y / 2
                     );
-                    spriteBatch.DrawString(font, letter, textPos, Color.White);
+                    font.Draw(spriteBatch, letter, textPos, Color.White);
                 }
             }
 
+            // ✅ UI - УЛУЧШЕННОЕ РАСПОЛОЖЕНИЕ
             if (font != null)
             {
                 var gs = engine.GameState;
 
-                // Счёт и жизни
-                spriteBatch.DrawString(font,
-                    $"Score: {gs.Score}  |  Lives: {gs.Lives}",
-                    new Vector2(10, 10), Color.White);
+                // Счёт и жизни - верхний левый угол
+                font.Draw(spriteBatch, $"Score: {gs.Score}", new Vector2(10, 10), Color.White);
+                font.Draw(spriteBatch, $"Lives: {gs.Lives}", new Vector2(10, 28), Color.White);
 
-                // Сообщения
+                // Сообщения по центру экрана
                 if (!engine.GameState.IsBallLaunched && !engine.GameState.IsGameOver && !engine.GameState.IsGameWon)
                 {
-                    spriteBatch.DrawString(font,
-                        "Press SPACE to start",
-                        new Vector2(280, 250), Color.Yellow);
+                    string msg = "Press SPACE to start";
+                    var measure = font.MeasureString(msg);
+                    Vector2 pos = new Vector2(
+                        Width / 2f - measure.X / 2,
+                        Height / 2f + 50
+                    );
+                    font.Draw(spriteBatch, msg, pos, Color.Yellow);
                 }
 
                 if (engine.GameState.IsPaused)
                 {
-                    spriteBatch.DrawString(font,
-                        "PAUSED - Press P",
-                        new Vector2(300, 250), Color.White);
+                    string msg = "PAUSED - Press P";
+                    var measure = font.MeasureString(msg);
+                    Vector2 pos = new Vector2(
+                        Width / 2f - measure.X / 2,
+                        Height / 2f
+                    );
+                    font.Draw(spriteBatch, msg, pos, Color.White);
                 }
 
                 if (engine.GameState.IsGameOver)
                 {
-                    spriteBatch.DrawString(font,
-                        "GAME OVER - Press R",
-                        new Vector2(280, 250), Color.Red);
+                    string msg1 = "GAME OVER";
+                    string msg2 = "Press R to Restart";
+                    var measure1 = font.MeasureString(msg1);
+                    var measure2 = font.MeasureString(msg2);
+                    Vector2 pos1 = new Vector2(
+                        Width / 2f - measure1.X / 2,
+                        Height / 2f - 20
+                    );
+                    Vector2 pos2 = new Vector2(
+                        Width / 2f - measure2.X / 2,
+                        Height / 2f + 10
+                    );
+                    font.Draw(spriteBatch, msg1, pos1, Color.Red);
+                    font.Draw(spriteBatch, msg2, pos2, Color.White);
                 }
 
                 if (engine.GameState.IsGameWon)
                 {
-                    spriteBatch.DrawString(font,
-                        "YOU WIN! - Press R",
-                        new Vector2(290, 250), Color.Gold);
+                    string msg1 = "YOU WIN!";
+                    string msg2 = "Press R to Restart";
+                    var measure1 = font.MeasureString(msg1);
+                    var measure2 = font.MeasureString(msg2);
+                    Vector2 pos1 = new Vector2(
+                        Width / 2f - measure1.X / 2,
+                        Height / 2f - 20
+                    );
+                    Vector2 pos2 = new Vector2(
+                        Width / 2f - measure2.X / 2,
+                        Height / 2f + 10
+                    );
+                    font.Draw(spriteBatch, msg1, pos1, Color.Gold);
+                    font.Draw(spriteBatch, msg2, pos2, Color.White);
                 }
 
-                // Легенда
-                spriteBatch.DrawString(font, "Power-ups:", new Vector2(10, Height - 70), Color.Gray);
-                spriteBatch.DrawString(font, "● Extra Ball", new Vector2(10, Height - 50), powerUpIndicatorColors[PowerUpType.ExtraBall]);
-                spriteBatch.DrawString(font, "▲ Damage", new Vector2(120, Height - 50), powerUpIndicatorColors[PowerUpType.DamageBoost]);
-                spriteBatch.DrawString(font, "◼ Wide", new Vector2(230, Height - 50), powerUpIndicatorColors[PowerUpType.WidePaddle]);
+                // ✅ Легенда - нижний левый угол, компактно
+                int legendY = Height - 60;
+                font.Draw(spriteBatch, "Power-ups:", new Vector2(10, legendY), Color.Gray);
+                font.Draw(spriteBatch, "● Extra", new Vector2(10, legendY + 18), powerUpIndicatorColors[PowerUpType.ExtraBall]);
+                font.Draw(spriteBatch, "▲ Damage", new Vector2(90, legendY + 18), powerUpIndicatorColors[PowerUpType.DamageBoost]);
+                font.Draw(spriteBatch, "◼ Wide", new Vector2(180, legendY + 18), powerUpIndicatorColors[PowerUpType.WidePaddle]);
             }
+
             spriteBatch.End();
             base.Draw(gameTime);
         }

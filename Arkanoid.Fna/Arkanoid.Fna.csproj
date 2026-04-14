@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{3177FEFC-F4E8-4CC1-9F04-731EC9B60934}</ProjectGuid>
+    <ProjectGuid>{C77F5A8B-AA6C-E490-F28B-66DB363EC18C}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>Arkanoid.Fna</RootNamespace>
     <AssemblyName>Arkanoid.Fna</AssemblyName>
@@ -62,14 +62,16 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <Content Include="GameFont.spritefont">
+    <Content Include="Content\GameFont.spritefont">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Generator>MSBuild</Generator>
     </Content>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FNA">
       <HintPath>.\FNA.dll</HintPath>
     </Reference>
+    <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Arkanoid.Logic\Arkanoid.Logic.csproj">
@@ -78,6 +80,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BitmapFont.cs" />
     <Compile Include="FNA.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>

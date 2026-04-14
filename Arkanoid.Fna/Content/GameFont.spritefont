@@ -1,16 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <XnaContent xmlns:Graphics="Microsoft.Xna.Framework.Content.Pipeline.Graphics">
-  <Asset Type="Graphics:FontDescription">
-    <FontName>Arial</FontName>
-    <Size>16</Size>
-    <Spacing>0</Spacing>
-    <UseKerning>true</UseKerning>
-    <Style>Regular</Style>
-    <Characters>
-      ABCDEFGHIJKLMNOPQRSTUVWXYZ
-      abcdefghijklmnopqrstuvwxyz
-      0123456789
-      .,!?-;:'"()[]{}@#$%^&amp;*+=&lt;&gt;/\|~`_ 
-    </Characters>
-  </Asset>
+    <Asset Type="Graphics:FontDescription">
+        <FontName>Arial</FontName>
+        <Size>16</Size>
+        <Spacing>0</Spacing>
+        <UseKerning>true</UseKerning>
+        <Style>Regular</Style>
+        <Characters>
+            ABCDEFGHIJKLMNOPQRSTUVWXYZ
+            abcdefghijklmnopqrstuvwxyz
+            0123456789
+            .,!?-;:'"()[]{}@#$%^&amp;*+=&lt;&gt;/\|~`_
+        </Characters>
+    </Asset>
 </XnaContent>
