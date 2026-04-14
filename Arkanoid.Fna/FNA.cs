@@ -138,7 +138,7 @@ namespace Arkanoid.FNA
                     color = Color.Lerp(color, Color.White, flashIntensity * 0.5f);
                 }
 
-                // ✅ Затемнение цвета в зависимости от здоровья
+                //Затемнение цвета в зависимости от здоровья
                 float healthRatio = (float)b.Health / b.MaxHealth;
                 Color brickColor = new Color(
                     (byte)(color.R * healthRatio),
@@ -154,7 +154,7 @@ namespace Arkanoid.FNA
                 spriteBatch.Draw(pixel, new Rectangle(b.X, b.Y, 2, b.Height), Color.Black * 0.5f);
                 spriteBatch.Draw(pixel, new Rectangle(b.X + b.Width - 2, b.Y, 2, b.Height), Color.Black * 0.5f);
 
-                // ✅ ТРЕЩИНЫ вместо цифр
+                //Трещины
                 int damageLevel = b.MaxHealth - b.Health;
                 if (damageLevel > 0)
                 {
@@ -231,15 +231,16 @@ namespace Arkanoid.FNA
                     };
 
                     var measure = font.MeasureString(letter);
+
                     Vector2 textPos = new Vector2(
-                        pu.X + pu.Size / 2 - measure.X / 2,
-                        pu.Y + pu.Size / 2 - measure.Y / 2
+                        pu.X + (pu.Size - measure.X) / 2,
+                        pu.Y + (pu.Size - measure.Y) / 2 - 2
                     );
+
                     font.Draw(spriteBatch, letter, textPos, Color.White);
                 }
             }
 
-            // ✅ UI - УЛУЧШЕННОЕ РАСПОЛОЖЕНИЕ
             if (font != null)
             {
                 var gs = engine.GameState;
@@ -307,12 +308,12 @@ namespace Arkanoid.FNA
                     font.Draw(spriteBatch, msg2, pos2, Color.White);
                 }
 
-                // ✅ Легенда - нижний левый угол, компактно
+                //Легенда - нижний левый угол, компактно
                 int legendY = Height - 60;
                 font.Draw(spriteBatch, "Power-ups:", new Vector2(10, legendY), Color.Gray);
-                font.Draw(spriteBatch, "● Extra", new Vector2(10, legendY + 18), powerUpIndicatorColors[PowerUpType.ExtraBall]);
-                font.Draw(spriteBatch, "▲ Damage", new Vector2(90, legendY + 18), powerUpIndicatorColors[PowerUpType.DamageBoost]);
-                font.Draw(spriteBatch, "◼ Wide", new Vector2(180, legendY + 18), powerUpIndicatorColors[PowerUpType.WidePaddle]);
+                font.Draw(spriteBatch, "● Extra Ball", new Vector2(10, legendY + 18), powerUpIndicatorColors[PowerUpType.ExtraBall]);
+                font.Draw(spriteBatch, "▲ Damage", new Vector2(180, legendY + 18), powerUpIndicatorColors[PowerUpType.DamageBoost]);
+                font.Draw(spriteBatch, "◼ Wide", new Vector2(340, legendY + 18), powerUpIndicatorColors[PowerUpType.WidePaddle]);
             }
 
             spriteBatch.End();

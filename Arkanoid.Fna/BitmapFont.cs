@@ -16,7 +16,6 @@ namespace Arkanoid.FNA
 
         public BitmapFont(GraphicsDevice graphicsDevice, string fontName, int size)
         {
-            // Создаём bitmap с символами
             using (var bmp = new Bitmap(256, 256))
             using (var g = System.Drawing.Graphics.FromImage(bmp))
             {
@@ -29,8 +28,8 @@ namespace Arkanoid.FNA
                 int x = 0, y = 0;
                 int lineHeight = 0;
 
-                // Генерируем символы
-                string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,!?-;:'\"()[]{}@#$%^&*+=<>|~`_";
+                // Генерирует символы
+                string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,!?-;:'\"()[]{}@#$%^&*+=<>|~`_●▲◼■★♦♣♠♥";
 
                 foreach (char c in chars)
                 {
@@ -66,7 +65,7 @@ namespace Arkanoid.FNA
                     x += w + 2; // отступ между символами
                 }
 
-                // Конвертируем в Texture2D
+                // Конвертирует в Texture2D
                 using (var stream = new MemoryStream())
                 {
                     bmp.Save(stream, ImageFormat.Png);

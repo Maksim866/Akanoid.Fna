@@ -364,6 +364,29 @@ namespace Arkanoid.Logic.Engine
                     if (ball.X < brick.X + brick.Width && ball.X + ball.Size > brick.X &&
                         ball.Y < brick.Y + brick.Height && ball.Y + ball.Size > brick.Y)
                     {
+                        var overlapLeft = ball.X + ball.Size - brick.X;
+                        var overlapRight = brick.X + brick.Width - ball.X;
+                        var overlapTop = ball.Y + ball.Size - brick.Y;
+                        var overlapBottom = brick.Y + brick.Height - ball.Y;
+                        var minOverlap = Math.Min(Math.Min(overlapLeft, overlapRight), Math.Min(overlapTop, overlapBottom));
+
+                        if (minOverlap == overlapLeft)
+                        {
+                            ball.X = brick.X - ball.Size;
+                        }
+                        else if (minOverlap == overlapRight)
+                        {
+                            ball.X = brick.X + brick.Width;
+                        }
+                        else if (minOverlap == overlapTop)
+                        {
+                            ball.Y = brick.Y - ball.Size;
+                        }
+                        else if (minOverlap == overlapBottom)
+                        {
+                            ball.Y = brick.Y + brick.Height;
+                        }
+
                         brick.Health -= ball.Damage;
                         brick.IsHit = true;
                         brick.HitFrames = ArkanoidConstants.HitEffectDuration;
@@ -372,6 +395,7 @@ namespace Arkanoid.Logic.Engine
                         {
                             brick.IsActive = false;
                             gameState.Score += ArkanoidConstants.PointsPerBrick * brick.MaxHealth;
+
                             if (brick.HasPowerUp)
                             {
                                 powerUps.Add(new PowerUpModel
@@ -385,12 +409,6 @@ namespace Arkanoid.Logic.Engine
                                 });
                             }
                         }
-
-                        var overlapLeft = ball.X + ball.Size - brick.X;
-                        var overlapRight = brick.X + brick.Width - ball.X;
-                        var overlapTop = ball.Y + ball.Size - brick.Y;
-                        var overlapBottom = brick.Y + brick.Height - ball.Y;
-                        var minOverlap = Math.Min(Math.Min(overlapLeft, overlapRight), Math.Min(overlapTop, overlapBottom));
 
                         if (minOverlap == overlapLeft || minOverlap == overlapRight)
                         {
