@@ -62,10 +62,6 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <Content Include="Content\GameFont.spritefont">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Generator>MSBuild</Generator>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FNA">
@@ -81,6 +77,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BitmapFont.cs" />
+    <Compile Include="Constants\UiTexts.cs" />
+    <Compile Include="Constants\GameConstants.cs" />
     <Compile Include="FNA.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>

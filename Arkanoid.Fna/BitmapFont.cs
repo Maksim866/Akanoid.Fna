@@ -15,76 +15,76 @@ namespace Arkanoid.FNA
     public class BitmapFont
     {
         private readonly Texture2D texture;
-        private readonly Dictionary<char, Microsoft.Xna.Framework.Rectangle> charRects = new();
-        private readonly int charWidth;
-        private readonly int charHeight;
+        private readonly Dictionary<char, Microsoft.Xna.Framework.Rectangle> charRectangles = new();
+        private readonly int maxCharWidth;
+        private readonly int maxCharHeight;
 
         /// <summary>
         /// Создаёт новый растровый шрифт из системного шрифта
         /// </summary>
-        /// <param name="graphicsDevice">Графическое устройство</param>
-        /// <param name="fontName">Имя системного шрифта (например "Arial")</param>
-        /// <param name="size">Размер шрифта в пунктах</param>
-        public BitmapFont(GraphicsDevice graphicsDevice, string fontName, int size)
+        public BitmapFont(GraphicsDevice graphicsDevice, string fontName, int fontSize)
         {
-            using var bmp = new Bitmap(512, 512);
-            using var g = Graphics.FromImage(bmp);
+            const int bitmapSize = 512;
+            const int charSpacing = 2;
 
-            var font = new Font(fontName, size, FontStyle.Regular);
-            g.Clear(System.Drawing.Color.Transparent);
-            g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+            using var bitmap = new Bitmap(bitmapSize, bitmapSize);
+            using var graphics = Graphics.FromImage(bitmap);
 
-            var x = 0;
-            var y = 0;
-            var lineHeight = 0;
+            var font = new Font(fontName, fontSize, FontStyle.Regular);
+            graphics.Clear(System.Drawing.Color.Transparent);
+            graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+
+            var xPosition = 0;
+            var yPosition = 0;
+            var currentLineHeight = 0;
             var maxWidth = 0;
             var maxHeight = 0;
 
-            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" +
-            "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ" +
-            "абвгдеёжзийклмнопрстуфхцчшщъыьэюя" +
-            "0123456789 .,!?-;:'\"()[]{}@#$%^&*+=<>|~`_/\\=●▲◼■★♦♣♠♥";
+            var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" +
+                            "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ" +
+                            "абвгдеёжзийклмнопрстуфхцчшщъыьэюя" +
+                            "0123456789 .,!?-;:'\"()[]{}@#$%^&*+=<>|~`_/\\=●▲◼■★♦♣♠♥";
 
-            foreach (var c in chars)
+            foreach (var character in characters)
             {
-                var sizeF = g.MeasureString(c.ToString(), font);
-                var w = (int)Math.Ceiling(sizeF.Width);
-                var h = (int)Math.Ceiling(sizeF.Height);
+                var characterSize = graphics.MeasureString(character.ToString(), font);
+                var characterWidth = (int)Math.Ceiling(characterSize.Width);
+                var characterHeight = (int)Math.Ceiling(characterSize.Height);
 
-                if (x + w > 512)
+                if (xPosition + characterWidth > bitmapSize)
                 {
-                    x = 0;
-                    y += lineHeight;
-                    lineHeight = 0;
+                    xPosition = 0;
+                    yPosition += currentLineHeight;
+                    currentLineHeight = 0;
                 }
 
-                if (h > lineHeight)
+                if (characterHeight > currentLineHeight)
                 {
-                    lineHeight = h;
+                    currentLineHeight = characterHeight;
                 }
 
-                if (w > maxWidth)
+                if (characterWidth > maxWidth)
                 {
-                    maxWidth = w;
+                    maxWidth = characterWidth;
                 }
 
-                if (h > maxHeight)
+                if (characterHeight > maxHeight)
                 {
-                    maxHeight = h;
+                    maxHeight = characterHeight;
                 }
 
-                g.DrawString(c.ToString(), font, Brushes.White, x, y);
-                charRects[c] = new Microsoft.Xna.Framework.Rectangle(x, y, w, h);
-                x += w + 2;
+                graphics.DrawString(character.ToString(), font, Brushes.White, xPosition, yPosition);
+                charRectangles[character] = new Microsoft.Xna.Framework.Rectangle(xPosition, yPosition, characterWidth, characterHeight);
+                xPosition += characterWidth + charSpacing;
             }
 
-            charWidth = maxWidth;
-            charHeight = maxHeight;
+            maxCharWidth = maxWidth;
+            maxCharHeight = maxHeight;
 
-            using var stream = new MemoryStream();
-            bmp.Save(stream, ImageFormat.Png);
-            stream.Position = 0;
-            texture = Texture2D.FromStream(graphicsDevice, stream);
+            using var memoryStream = new MemoryStream();
+            bitmap.Save(memoryStream, ImageFormat.Png);
+            memoryStream.Position = 0;
+            texture = Texture2D.FromStream(graphicsDevice, memoryStream);
         }
 
         /// <summary>
@@ -92,31 +92,34 @@ namespace Arkanoid.FNA
         /// </summary>
         public void Draw(SpriteBatch spriteBatch, string text, Vector2 position, Color color)
         {
-            var x = position.X;
-            var y = position.Y;
+            const int charSpacing = 2;
+            const int additionalSpacing = 1;
 
-            foreach (var c in text)
+            var xPosition = position.X;
+            var yPosition = position.Y;
+
+            foreach (var character in text)
             {
-                if (c == '\n')
+                if (character == '\n')
                 {
-                    x = position.X;
-                    y += charHeight + 2;
+                    xPosition = position.X;
+                    yPosition += maxCharHeight + charSpacing;
                     continue;
                 }
 
-                if (charRects.TryGetValue(c, out var rect))
+                if (charRectangles.TryGetValue(character, out var characterRectangle))
                 {
                     spriteBatch.Draw(
                         texture,
                         new Microsoft.Xna.Framework.Rectangle(
-                            (int)x,
-                            (int)y,
-                            rect.Width,
-                            rect.Height),
-                        rect,
+                            (int)xPosition,
+                            (int)yPosition,
+                            characterRectangle.Width,
+                            characterRectangle.Height),
+                        characterRectangle,
                         color
                     );
-                    x += rect.Width + 1;
+                    xPosition += characterRectangle.Width + additionalSpacing;
                 }
             }
         }
@@ -126,36 +129,39 @@ namespace Arkanoid.FNA
         /// </summary>
         public Vector2 MeasureString(string text)
         {
-            var maxWidth = 0f;
-            var height = 0f;
-            var currentWidth = 0f;
+            const int charSpacing = 2;
+            const int lineSpacing = 2;
 
-            foreach (var c in text)
+            var maxWidth = 0f;
+            var totalHeight = 0f;
+            var currentLineWidth = 0f;
+
+            foreach (var character in text)
             {
-                if (c == '\n')
+                if (character == '\n')
                 {
-                    if (currentWidth > maxWidth)
+                    if (currentLineWidth > maxWidth)
                     {
-                        maxWidth = currentWidth;
+                        maxWidth = currentLineWidth;
                     }
 
-                    currentWidth = 0;
-                    height += charHeight + 2;
+                    currentLineWidth = 0;
+                    totalHeight += maxCharHeight + lineSpacing;
                     continue;
                 }
 
-                if (charRects.TryGetValue(c, out var rect))
+                if (charRectangles.TryGetValue(character, out var characterRectangle))
                 {
-                    currentWidth += rect.Width + 1;
+                    currentLineWidth += characterRectangle.Width + charSpacing;
                 }
             }
 
-            if (currentWidth > maxWidth)
+            if (currentLineWidth > maxWidth)
             {
-                maxWidth = currentWidth;
+                maxWidth = currentLineWidth;
             }
 
-            return new Vector2(maxWidth, height + charHeight);
+            return new Vector2(maxWidth, totalHeight + maxCharHeight);
         }
     }
 }
